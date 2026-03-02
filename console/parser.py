@@ -2,6 +2,18 @@ from zipfile import ZipFile
 from xml.etree import ElementTree as ET
 import re
 
+#1. 55°43'00,7" с.ш. 54°16'41,0" в.д.
+def parse_coords(input):
+    res = {"lng", "lat"}
+    print(input)
+    coords_pattern = "\\d{1,3}\\.\\s+(\\d{1,3})°(\\d{1,3})'(\\d{1,3})\\,(\\d{1,3})\\\"\\s+([с|ю]{1}\\.ш\\.)\\s+";
+    data = re.search(coords_pattern, input, re.IGNORECASE)
+    print(data)
+    print(res)
+    exit()
+    return res
+
+
 ns = {
         "office": "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
         "text": "urn:oasis:names:tc:opendocument:xmlns:text:1.0",
@@ -35,7 +47,7 @@ for cell in root.findall(f".//table:table-cell", ns):
         for p in paragraphs:
             if None != p.text:
                 if regexp.match(p.text):
-                    geo_data[region_count]["data"][data_count]["points"].append(p.text)
+                    geo_data[region_count]["data"][data_count]["points"].append(parse_coords(p.text))
                 else:
                     if geo_data[region_count]["data"][data_count]["title"] != "":
                         geo_data[region_count]["data"][data_count]["title"] += " "
