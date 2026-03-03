@@ -2,15 +2,24 @@ from zipfile import ZipFile
 from xml.etree import ElementTree as ET
 import re
 
+stats ={"total": 0, "error": 0, "incorrect": []}
+
 #1. 55°43'00,7" с.ш. 54°16'41,0" в.д.
 def parse_coords(input):
-    res = {"lng", "lat"}
-    print(input)
-    coords_pattern = "\\d{1,3}\\.\\s+(\\d{1,3})°(\\d{1,3})'(\\d{1,3})\\,(\\d{1,3})\\\"\\s+([с|ю]{1}\\.ш\\.)\\s+";
-    data = re.search(coords_pattern, input, re.IGNORECASE)
-    print(data)
-    print(res)
-    exit()
+    res = {"lng": 0.0, "lat": 0.0}
+    stats["total"] += 1
+#    print(input)
+    coords_pattern = "\\d{1,3}\\.\\s+(\\d{1,3})°(\\d{1,3})'(\\d{1,3})[\\,\\s]?(\\d{1,6})?\\\"?\\s+([с|ю]{1}\\.ш\\.)[\\s\\,]+(\\d{1,3})°(\\d{1,3})'(\\d{1,3})[\\,\\s]?(\\d{1,6})?\\\"?\\s+([в|з]{1}\\.д\\.)";
+    data = re.match(coords_pattern, input, re.IGNORECASE)
+    if data:
+#       print(data)
+        res["lng"] = data
+        res["lat"] = data
+    else:
+        stats["error"] += 1
+        stats["incorrect"].append(input)
+#    print(res)
+#    exit()
     return res
 
 
@@ -54,4 +63,5 @@ for cell in root.findall(f".//table:table-cell", ns):
                     geo_data[region_count]["data"][data_count]["title"] = geo_data[region_count]["data"][data_count]["title"] + p.text
         data_count = data_count + 1
 
-print(geo_data)
+#print(geo_data)
+print(stats)
