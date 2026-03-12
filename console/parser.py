@@ -62,8 +62,8 @@ def convert_coords(input):
                     stats["error_convert"].append(save_input + " [" + data + "]")
                     return None
 
-    res = sign * (float(params["degrees"]["value"]) + float(params["minutes"]["value"])/60 + params["seconds"]["value"] / 3600)
-    return res
+    res = params["degrees"]["value"] + params["minutes"]["value"]/60.0 + params["seconds"]["value"]/3600.0
+    return res*sign
 
 ns = {
         "office": "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
