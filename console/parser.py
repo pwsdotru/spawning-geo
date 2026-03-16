@@ -1,8 +1,9 @@
 from zipfile import ZipFile
 from xml.etree import ElementTree as ET
 import re
+import json
 
-stats ={"total": 0, "error": 0, "error_parse": [], "error_convert": []}
+stats ={"total": 0, "error": 0, "error_parse": [], "error_convert": [], "empty_points": []}
 
 #1. 55°43'00,7" с.ш. 54°16'41,0" в.д.
 def parse_coords(input):
@@ -109,5 +110,31 @@ for cell in root.findall(f".//table:table-cell", ns):
                     geo_data[region_count]["data"][data_count]["title"] = geo_data[region_count]["data"][data_count]["title"] + p.text
         data_count = data_count + 1
 
-print(geo_data)
-print(stats)
+
+output_json = []
+for rid, region in geo_data.items():
+#    print(region)
+    collection = {"type":"FeatureCollection", "features":[]}
+    for pid, data in region["data"].items():
+        coords = []
+        if len(data["points"]) > 0:
+            for point in data["points"]:
+                coords.append([point["lat_geo"], point["lng_geo"]])
+
+            feature = {
+                "type":"Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates":[coords]
+                },
+                "properties": {
+                    "description": region["region"] + " -> " + data["title"]
+                }
+            }
+            collection["features"].append(feature)
+        else:
+            stats["error"] += 1
+            stats["empty_points"].append(data["title"])
+    output_json.append(collection)
+    print(json.dumps(output_json, indent=4))
+    exit()
