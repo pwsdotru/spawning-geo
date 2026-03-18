@@ -1,6 +1,8 @@
 from zipfile import ZipFile
 from xml.etree import ElementTree as ET
 import re
+import os
+import sys
 import json
 
 stats ={"total": 0, "error": 0, "error_parse": [], "error_convert": [], "empty_points": []}
@@ -65,6 +67,13 @@ def convert_coords(input):
 
     res = params["degrees"]["value"] + params["minutes"]["value"]/60.0 + params["seconds"]["value"]/3600.0
     return res*sign
+def parse_arg():
+    params = {'input':''}
+    for i in range(1, len(sys.argv)):
+        arg = sys.argv[i].strip()
+        if arg != '' and os.path.exists(arg):
+            params['input'] = arg
+    return params
 
 ns = {
         "office": "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
@@ -77,8 +86,13 @@ data_count = 0
 
 regexp = re.compile("[0-9]{1,3}\\.")
 
-path = "doc.odt"
-with ZipFile(path) as z, z.open("content.xml") as f:
+script_params = parse_arg()
+
+if script_params['input'] == '':
+    print("Не указаны параметры запуска скрипта")
+    exit()
+
+with ZipFile(script_params['input']) as z, z.open("content.xml") as f:
     root = ET.parse(f).getroot()
 
 
@@ -111,16 +125,19 @@ for cell in root.findall(f".//table:table-cell", ns):
         data_count = data_count + 1
 
 
-output_json = []
+output_json = {"type":"FeatureCollection", "features":[]}
 for rid, region in geo_data.items():
 #    print(region)
-    collection = {"type":"FeatureCollection", "features":[]}
     for pid, data in region["data"].items():
         coords = []
         if len(data["points"]) > 0:
+            first = None
             for point in data["points"]:
-                coords.append([point["lat_geo"], point["lng_geo"]])
-
+                p = [point["lat_geo"], point["lng_geo"]]
+                if first == None:
+                    first = p
+                coords.append(p)
+            coords.append(first)
             feature = {
                 "type":"Feature",
                 "geometry": {
@@ -131,10 +148,9 @@ for rid, region in geo_data.items():
                     "description": region["region"] + " -> " + data["title"]
                 }
             }
-            collection["features"].append(feature)
+            output_json["features"].append(feature)
         else:
             stats["error"] += 1
             stats["empty_points"].append(data["title"])
-    output_json.append(collection)
     print(json.dumps(output_json, indent=4))
     exit()
