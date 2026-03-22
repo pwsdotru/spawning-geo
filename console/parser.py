@@ -67,14 +67,24 @@ def convert_coords(input):
 
     res = params["degrees"]["value"] + params["minutes"]["value"]/60.0 + params["seconds"]["value"]/3600.0
     return res*sign
+#
+#Получение параметров коммандной строки
+#
 def parse_arg():
-    params = {'input':''}
+    params = {
+        'input': '',
+        'output': 'geojson',
+        'pretty': 1
+    }
     for i in range(1, len(sys.argv)):
         arg = sys.argv[i].strip()
         if arg != '' and os.path.exists(arg):
             params['input'] = arg
     return params
 
+#
+#Основной код
+#
 ns = {
         "office": "urn:oasis:names:tc:opendocument:xmlns:office:1.0",
         "text": "urn:oasis:names:tc:opendocument:xmlns:text:1.0",
