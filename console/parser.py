@@ -80,7 +80,8 @@ def convert_coords(input):
 def parse_arg():
     params = {
         'input': '',
-        'output': 'geojson',
+        'format': 'geojson',
+        'output': '',
         'pretty': 1
     }
     op_len = len(sys.argv)
@@ -97,7 +98,7 @@ def parse_arg():
                         params[key] = ''
                     else:
                         params[key] = value.strip()
-                    #следующего за ключевым словом параметра нет
+                #следующего за ключевым словом параметра нет
                 else:
                     params[key] =  ''
         else:
@@ -105,6 +106,39 @@ def parse_arg():
                 params['input'] = arg
 
     return params
+
+#
+#Формирование geoJSON из собранных данных
+#
+def build_geojson(data):
+    output_json = {"type":"FeatureCollection", "features":[]}
+    for rid, region in data.items():
+        for pid, data in region["data"].items():
+            coords = []
+            if len(data["points"]) > 0:
+                first = None
+                for point in data["points"]:
+                    p = [point["lat_geo"], point["lng_geo"]]
+                    if first == None:
+                        first = p
+                    coords.append(p)
+
+                coords.append(first)
+                feature = {
+                    "type":"Feature",
+                    "geometry": {
+                        "type": "Polygon",
+                        "coordinates":[coords]
+                    },
+                    "properties": {
+                        "description": region["region"] + " -> " + data["title"]
+                    }
+                }
+                output_json["features"].append(feature)
+            else:
+                stats["error"] += 1
+                stats["empty_points"].append(data["title"])
+    return json.dumps(output_json, indent=4)
 
 #
 #Основной код
@@ -165,36 +199,9 @@ for cell in root.findall(f".//table:table-cell", ns):
                     geo_data[region_count]["data"][data_count]["title"] = geo_data[region_count]["data"][data_count]["title"] + p.text
         data_count = data_count + 1
 
-if script_params["output"] == "raw":
-    print(json.dumps(geo_data, indent=4))
-    exit()
+if script_params["format"] == "raw":
+    out = json.dumps(geo_data, indent=4)
+else:
+    out = build_geojson(geo_data)
 
-output_json = {"type":"FeatureCollection", "features":[]}
-for rid, region in geo_data.items():
-#    print(region)
-    for pid, data in region["data"].items():
-        coords = []
-        if len(data["points"]) > 0:
-            first = None
-            for point in data["points"]:
-                p = [point["lat_geo"], point["lng_geo"]]
-                if first == None:
-                    first = p
-                coords.append(p)
-            coords.append(first)
-            feature = {
-                "type":"Feature",
-                "geometry": {
-                    "type": "Polygon",
-                    "coordinates":[coords]
-                },
-                "properties": {
-                    "description": region["region"] + " -> " + data["title"]
-                }
-            }
-            output_json["features"].append(feature)
-        else:
-            stats["error"] += 1
-            stats["empty_points"].append(data["title"])
-    print(json.dumps(output_json, indent=4))
-    exit()
+print(out)
