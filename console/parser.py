@@ -82,7 +82,8 @@ def parse_arg():
         'input': '',
         'format': 'geojson',
         'output': '',
-        'pretty': 1
+        'pretty': 1,
+        'stat': ''
     }
     op_len = len(sys.argv)
     for i in range(1, op_len):
@@ -102,7 +103,7 @@ def parse_arg():
                 else:
                     params[key] =  ''
         else:
-            if arg != '' and os.path.exists(arg):
+            if arg != '' and os.path.exists(arg) and params['input'] == '':
                 params['input'] = arg
 
     return params
@@ -204,4 +205,12 @@ if script_params["format"] == "raw":
 else:
     out = build_geojson(geo_data)
 
-print(out)
+if script_params["output"] == "":
+    print(out)
+else:
+    with open(script_params["output"], "w") as f:
+        f.write(out + "\n")
+        f.close()
+
+if script_params["stat"] != "":
+    print(stats)
