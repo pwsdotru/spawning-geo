@@ -82,7 +82,6 @@ def parse_arg():
         'input': '',
         'format': 'geojson',
         'output': '',
-        'pretty': 1,
         'stat': ''
     }
     op_len = len(sys.argv)
@@ -92,16 +91,19 @@ def parse_arg():
             key = arg[2:]
             #если есть параметр с таким именем, то пытаемся присвоить ему значение
             if key in params:
-                if i+1 < op_len:
-                    value = sys.argv[i+1]
-                    #если следующим идет другое ключевое поле, то значение пустое
-                    if value[0:2] == '--':
-                        params[key] = ''
-                    else:
-                        params[key] = value.strip()
-                #следующего за ключевым словом параметра нет
+                if key == 'stat':
+                    params[key] = 1
                 else:
-                    params[key] =  ''
+                    if i+1 < op_len:
+                        value = sys.argv[i+1]
+                        #если следующим идет другое ключевое поле, то значение пустое
+                        if value[0:2] == '--':
+                            params[key] = ''
+                        else:
+                            params[key] = value.strip()
+                    #следующего за ключевым словом параметра нет
+                    else:
+                        params[key] =  ''
         else:
             if arg != '' and os.path.exists(arg) and params['input'] == '':
                 params['input'] = arg
@@ -140,6 +142,15 @@ def build_geojson(data):
                 stats["error"] += 1
                 stats["empty_points"].append(data["title"])
     return json.dumps(output_json, indent=4)
+
+#
+#Вывод статистики
+#
+def output_stats(data):
+    print("Всего обработано координат: {0}".format(data["total"]))
+    print("Ошибок: {0}".format(data["error"]))
+    if 0 != data["error"]:
+        print(data)
 
 #
 #Основной код
@@ -213,4 +224,4 @@ else:
         f.close()
 
 if script_params["stat"] != "":
-    print(stats)
+    output_stats(stats)

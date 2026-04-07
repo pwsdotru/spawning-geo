@@ -42,6 +42,17 @@ python console/parser.py examples/full-list.odt
 
 --output - файл в который выводить результат. Если параметр не указан, то выводится в консоль.
 
+--stat - нужно вывести данные со статистикой парсинга и обработки. можно просто указать параметр без аргументов
+
+**Пример:**
+````shell script
+python console/parser.py examples/tver.odt --output examples/tver.geojson --stat
+````
+
+Т.е. в качестве исходнного документа использовать файл [tver.odt](./examples/tver.odt) 
+из папки [examples](./examples). Результат сохранить в ту же папку, 
+но в файл [tver.geojson](./examples/tver.geojson) и вывести статистику.
+
 ### Формат координат
 
 Координаты, в документе, указаны в формате ГСК 2011 (?) в виде **гг°мм'сc.ссс"** 
