@@ -150,7 +150,12 @@ def output_stats(data):
     print("Всего обработано координат: {0}".format(data["total"]))
     print("Ошибок: {0}".format(data["error"]))
     if 0 != data["error"]:
-        print(data)
+        if len(data["empty_points"]) > 0:
+            print("Не указаны координаты")
+            ecnt = 1
+            for e in data["empty_points"]:
+                print("{:02d}: {:s}".format(ecnt, e))
+                ecnt += 1
 
 #
 #Основной код
